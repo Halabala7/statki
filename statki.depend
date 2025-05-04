@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1746312555 source:c:\users\dawid\desktop\c++\statki\statki\main.cpp
+	<iostream>
+	<vector>
+	<windows.h>
+	<cstdlib>
+	<ctime>
+	<limits>
+
