@@ -39,7 +39,7 @@ class Board
         friend class Si;
     public:
         Board();
-        void printMap();
+        void printMap(bool showShips);
         bool autoPlaceShip(int size);
         bool checkShipPlace(int randomX, int randomY, int isVertical, int size);
         void addShipToBoard(const Ship& ship);
@@ -115,9 +115,7 @@ Game::~Game()
 void Game::startGameVsSi()
 {
     cout<<"grasz z SI\n";
-
-    //tworzenie mapy czlowieka
-    Board humanBoard;
+	Board humanBoard;
 
     //manualne wstawianie statkow
     if(chooseShipPlacement())
@@ -127,11 +125,10 @@ void Game::startGameVsSi()
     //automatyczne wstawianie statkow
     else
     {
-        Board humanBoard;
-
+        
         player1->autoShipPlacement(humanBoard);
         cout<<"plansza gracza: \n";
-        humanBoard.printMap();
+        humanBoard.printMap(true);
 
         cout<<endl;
 
@@ -141,29 +138,54 @@ void Game::startGameVsSi()
     player2->autoShipPlacement(siBoard);
     cout<<"statki si postawione pomyslnie!\n";
 
-    cout<<"plansza si: \n";
-    siBoard.printMap();
+
 
   	while(true)
   	{
-    	player1->makeMove(siBoard);
-    	if(siBoard.areAllShipsSunk())
-		{
-			break;
+  		cout<<"gracz atakuje:"<<endl;
+    	if(player1->makeMove(siBoard))
+    	{
+    		cout<<"trafiony!"<<endl;
+    		if(siBoard.areAllShipsSunk())
+			{
+				break;
+			}	
+			
 		}
-		player2->makeMove(humanBoard);
+		cout<<"plansza SI: "<<endl;
+		siBoard.printMap(false);
+		cout<<"SI atakuje:"<<endl;
+		system("pause");
+		if(player2->makeMove(humanBoard))
+    	{
+    		cout<<"trafiony!"<<endl;
+    		if(siBoard.areAllShipsSunk())
+			{
+				break;
+			}	
+		}
+		cout<<"plansza gracza: "<<endl;
+		humanBoard.printMap(true);
+    	
+		
+	
 
+		
+		
+		
 	}
-	cout<<endl;
-	cout<<endl;
+	system("cls");
 	cout<<"koniec gry!"<<endl;
 	cout<<"plansze: "<<endl;
 	cout<<endl;
 	cout<<"plansza gracza: "<<endl;
-	humanBoard.printMap();
+	humanBoard.printMap(true);
 	cout<<endl;
 	cout<<"plansza komputera: "<<endl;
-	siBoard.printMap();
+	siBoard.printMap(false);
+	
+	delete player1;
+	delete player2;
 }
 void Game::startGameVsHuman()
 {
@@ -222,15 +244,12 @@ bool Human::makeMove(Board& enemyBoard)
 		{
 			if(enemyBoard.receiveAttack(atackPosition[0], atackPosition[1]))
 			{
-				enemyBoard.printMap();
 				return true;
 			}
 			else
 			{
-				enemyBoard.printMap();
 				return false;
 			}
-
 		}
 		else
 		{
@@ -252,7 +271,6 @@ bool Player::isValidCoordinate(const string& position)
 				{
 					if(isdigit(position[1]))
 					{
-
 						return true;
 					}
 				}
@@ -273,22 +291,24 @@ bool Si::makeMove(Board& enemyBoard)
         attackPosition = "";
         attackPosition += xChar;
         attackPosition += yChar;
-
+		
         if (isValidCoordinate(attackPosition))
         {
 
-            int x = xChar - '@';
-            int y = yChar - '0';
 
-
-            if (enemyBoard.map[y][x] == '.' || enemyBoard.map[y][x] == 'o')
-            {
-                cout << "SI atakuje pozycje: " << attackPosition << endl;
-                enemyBoard.receiveAttack(xChar, yChar);
-                enemyBoard.printMap();
-                return true;
-            }
+           if(enemyBoard.receiveAttack(xChar, yChar))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
         }
+        else
+		{
+			cout<<"bledna wspolrzedna"<<endl;
+		}
     }
 
     return false;
@@ -396,13 +416,28 @@ Board::Board()
 
 }
 
-void Board::printMap()
+void Board::printMap(bool showShips)
 {
     for(int i=0; i<10; i++)
 	{
 		for(int j=0;j<10;j++)
 		{
-			cout<<map[i][j]<<" ";
+			if(showShips)
+			{
+				cout<<map[i][j]<<" ";	
+			}
+			else
+			{
+				if(map[i][j] == 'o')
+				{
+					cout<<"."<<" ";
+				}
+				else
+				{
+					cout<<map[i][j]<<" ";
+				}
+			}
+			
 		}
 		cout<<endl;
 	}
@@ -498,7 +533,11 @@ bool Board::receiveAttack(int x, int y)
 {
 	x = x - 64; //przeliczamy spowrrotem z kodu ASCII na liczby aby sprawdzić współrzędne na mapie
 	y = y - 48;
-
+	if(map[x][y] == 'x' || map[x][y] == '-')
+	{
+		cout<<"pozycja juz byla podana!"<<endl;
+		
+	}
 	for (Ship& ship : ships)
 	{
         if (ship.isHitted(y, x))
